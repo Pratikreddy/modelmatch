@@ -96,7 +96,7 @@ if page == "Text Comparison":
 
     # API keys input
     st.subheader("Enter API Keys")
-    api_key_dropdown = st.selectbox("Select API Key to Enter", ["OpenAI", "Groq"])
+    api_key_dropdown = st.selectbox("Select API Key to Enter", ["OpenAI", "Groq"], key="api_key_dropdown")
     if api_key_dropdown == "OpenAI":
         st.session_state.api_keys["openai"] = st.text_input("OpenAI API Key (Text)", type="password", key="openai_key")
     elif api_key_dropdown == "Groq":
