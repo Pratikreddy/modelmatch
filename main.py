@@ -3,7 +3,6 @@ import json
 import requests
 from openai import OpenAI
 from groq import Groq
-import google.generativeai as genai
 
 # Set up the page layout
 st.set_page_config(page_title="Model Match", layout="wide")
@@ -31,11 +30,6 @@ model_options = {
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-16k-0613"
     ],
-    "Gemini": [
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-flash-latest",
-        "gemini-1.0-pro-latest"
-    ],
     "Groq": [
         "gemma-7b-it",
         "llama3-70b-8192",
@@ -43,23 +37,6 @@ model_options = {
         "mixtral-8x7b-32768"
     ]
 }
-
-# Function for making API calls to Gemini using google.generativeai
-def gemini(system_prompt, user_prompt, gemini_api_key, model):
-    genai.configure(api_key=gemini_api_key)
-    if not model.startswith("models/") and not model.startswith("tunedModels/"):
-        model = "models/" + model  # Prefix with "models/" if not already prefixed
-    try:
-        response = genai.generate_text(
-            model=model,
-            prompt=f"{system_prompt}\n\n{user_prompt}",
-            temperature=0.7,
-            candidate_count=1,
-            max_output_tokens=256
-        )
-        return response.candidates[0]['output']
-    except Exception as e:
-        return f"Error: {e}"
 
 # Function for making API calls to OpenAI
 def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
@@ -95,9 +72,7 @@ def groq(system_prompt, user_prompt, expected_format, groqkey, model):
 
 # Helper function to map model names to appropriate API calls
 def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
-    if "gemini" in model:
-        return gemini(system_prompt, user_prompt, keys['gemini'], model)
-    elif "gpt" in model:
+    if "gpt" in model:
         return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model)
     elif "llama" in model or "gemma" in model or "mixtral" in model:
         return groq(system_prompt, user_prompt, expected_format, keys['groq'], model)
@@ -118,16 +93,9 @@ if page == "Text Comparison":
 
     # API keys input
     st.subheader("Enter API Keys")
-    gemini_api_key_text = st.text_input("Gemini API Key (Text)", type="password")
-    openai_api_key_text = st.text_input("OpenAI API Key (Text)", type="password")
-    groq_api_key_text = st.text_input("Groq API Key (Text)", type="password")
-
-    # Store keys in a dictionary
-    api_keys = {
-        "gemini": gemini_api_key_text,
-        "openai": openai_api_key_text,
-        "groq": groq_api_key_text
-    }
+    api_keys = {}
+    api_keys["openai"] = st.text_input("OpenAI API Key (Text)", type="password")
+    api_keys["groq"] = st.text_input("Groq API Key (Text)", type="password")
 
     # Dropdown to select models for comparison
     selected_models = []
@@ -153,13 +121,22 @@ if page == "Text Comparison":
         else:
             st.write("Comparing outputs for the selected models...")
 
+            # Colors for the boxes
+            colors = ["#FFDDC1", "#C1FFD7", "#D1C1FF", "#FFFAC1", "#FFC1C1"]
             # Placeholder for the honeycomb structure of model outputs
             cols = st.columns(5)
             for i, model in enumerate(selected_models):
                 with cols[i % 5]:
                     output = call_model_api(model, system_prompt, user_prompt, expected_format, api_keys)
-                    st.write(f"Output from {model}:")
-                    st.write(output)
+                    st.markdown(
+                        f"""
+                        <div style='border: 2px solid black; padding: 10px; margin: 10px 0; border-radius: 8px; background-color: {colors[i % len(colors)]};'>
+                            <h4 style='text-align: center;'>{model}</h4>
+                            <p>{output}</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
 
 # Image Comparison Page
 elif page == "Image Comparison (Coming Soon)":
