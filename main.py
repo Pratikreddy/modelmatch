@@ -83,9 +83,12 @@ def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
 st.title("Model Match")
 st.write("Compare outputs from different AI models.")
 
-# Initialize chat history in session state
+# Initialize chat history and API keys in session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+
+if "api_keys" not in st.session_state:
+    st.session_state.api_keys = {"openai": "", "groq": ""}
 
 # Text Comparison Page
 if page == "Text Comparison":
@@ -95,9 +98,9 @@ if page == "Text Comparison":
     st.subheader("Enter API Keys")
     api_key_dropdown = st.selectbox("Select API Key to Enter", ["OpenAI", "Groq"])
     if api_key_dropdown == "OpenAI":
-        api_keys["openai"] = st.text_input("OpenAI API Key (Text)", type="password", key="openai_key")
+        st.session_state.api_keys["openai"] = st.text_input("OpenAI API Key (Text)", type="password", key="openai_key")
     elif api_key_dropdown == "Groq":
-        api_keys["groq"] = st.text_input("Groq API Key (Text)", type="password", key="groq_key")
+        st.session_state.api_keys["groq"] = st.text_input("Groq API Key (Text)", type="password", key="groq_key")
 
     # Dropdown to select models for comparison
     selected_models = []
@@ -129,7 +132,7 @@ if page == "Text Comparison":
             cols = st.columns(5)
             for i, model in enumerate(selected_models):
                 with cols[i % 5]:
-                    output = call_model_api(model, system_prompt, user_prompt, expected_format, api_keys)
+                    output = call_model_api(model, system_prompt, user_prompt, expected_format, st.session_state.api_keys)
                     st.markdown(
                         f"""
                         <div style='border: 2px solid black; padding: 10px; margin: 10px 0; border-radius: 8px; background-color: {colors[i % len(colors)]};'>
