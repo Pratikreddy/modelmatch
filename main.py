@@ -2,6 +2,9 @@ import streamlit as st
 import json
 import requests
 from openai import OpenAI
+from groq import Groq
+import base64
+import os
 
 # Set up the page layout
 st.set_page_config(page_title="Model Match", layout="wide")
