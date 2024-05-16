@@ -3,6 +3,7 @@ import json
 import requests
 from openai import OpenAI
 from groq import Groq
+import google.generativeai as genai
 
 # Set up the page layout
 st.set_page_config(page_title="Model Match", layout="wide")
@@ -44,28 +45,17 @@ model_options = {
 }
 
 # Functions for making API calls to different models
-def gemini(system_prompt, user_prompt, expected_format, url):
-    payload = json.dumps({
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"system_prompt : {system_prompt}"},
-                    {"text": f"user_prompt : {user_prompt}"},
-                    {"text": f"expected_format : {expected_format}"}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "response_mime_type": "application/json"
-        }
-    })
 
-    headers = {'Content-Type': 'application/json'}
-
-    response = requests.post(url, headers=headers, data=payload)
-    response_data = response.json()
-    text_value = response_data["candidates"][0]["content"]["parts"][0]["text"]
-    return text_value
+def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
+    genai.configure(api_key=gemini_api_key)
+    response = genai.chat(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+    )
+    return response["candidates"][0]["content"]
 
 def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
     client = OpenAI(api_key=gptkey)
@@ -100,8 +90,7 @@ def groq(system_prompt, user_prompt, expected_format, groqkey, model):
 # Helper function to map model names to appropriate API calls
 def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
     if "gemini" in model:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={keys['gemini']}"
-        return gemini(system_prompt, user_prompt, expected_format, url)
+        return gemini(system_prompt, user_prompt, expected_format, keys['gemini'], model)
     elif "gpt" in model:
         return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model)
     elif "llama" in model or "gemma" in model or "mixtral" in model:
