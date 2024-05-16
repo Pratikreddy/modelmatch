@@ -47,14 +47,17 @@ model_options = {
 # Function for making API calls to Gemini using google.generativeai
 def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
     genai.configure(api_key=gemini_api_key)
-    response = genai.chat(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ]
-    )
-    return response["candidates"][0]["content"]
+    try:
+        response = genai.chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+        )
+        return response["candidates"][0]["content"]
+    except Exception as e:
+        return f"Error: {e}"
 
 # Function for making API calls to OpenAI
 def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
