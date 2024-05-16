@@ -3,8 +3,6 @@ import json
 import requests
 from openai import OpenAI
 from groq import Groq
-import base64
-import os
 
 # Set up the page layout
 st.set_page_config(page_title="Model Match", layout="wide")
@@ -17,25 +15,25 @@ with st.sidebar:
 # Define model options organized by group
 model_options = {
     "OpenAI": [
-        "GPT-4o (gpt-4o-2024-05-13)",
-        "GPT-4 Turbo (gpt-4-turbo-2024-04-09)",
-        "GPT-4 Turbo (gpt-4-turbo-preview)",
-        "GPT-4 Turbo (gpt-4-0125-preview)",
-        "GPT-4 Turbo (gpt-4-1106-preview)",
-        "GPT-4 Turbo (gpt-4-vision-preview)",
-        "GPT-4 Turbo (gpt-4-1106-vision-preview)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo-0125)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo-1106)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo-instruct)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo-16k)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo-0613)",
-        "GPT-3.5 Turbo (gpt-3.5-turbo-16k-0613)"
+        "gpt-4o-2024-05-13",
+        "gpt-4-turbo-2024-04-09",
+        "gpt-4-turbo-preview",
+        "gpt-4-0125-preview",
+        "gpt-4-1106-preview",
+        "gpt-4-vision-preview",
+        "gpt-4-1106-vision-preview",
+        "gpt-3.5-turbo-0125",
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-1106",
+        "gpt-3.5-turbo-instruct",
+        "gpt-3.5-turbo-16k",
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k-0613"
     ],
     "Gemini": [
-        "Gemini 1.5 Pro (gemini-1.5-pro-latest)",
-        "Gemini 1.5 Flash (gemini-1.5-flash-latest)",
-        "Gemini 1.0 Pro (gemini-1.0-pro-latest)"
+        "gemini-1.5-pro-latest",
+        "gemini-1.5-flash-latest",
+        "gemini-1.0-pro-latest"
     ],
     "Groq": [
         "gemma-7b-it",
@@ -45,7 +43,7 @@ model_options = {
     ]
 }
 
-# Function for making API calls to Gemini
+# Functions for making API calls to different models
 def gemini(system_prompt, user_prompt, expected_format, url):
     payload = json.dumps({
         "contents": [
@@ -64,12 +62,11 @@ def gemini(system_prompt, user_prompt, expected_format, url):
 
     headers = {'Content-Type': 'application/json'}
 
-    response = requests.request("POST", url, headers=headers, data=payload)
+    response = requests.post(url, headers=headers, data=payload)
     response_data = response.json()
     text_value = response_data["candidates"][0]["content"]["parts"][0]["text"]
     return text_value
 
-# Function for making API calls to OpenAI
 def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
     client = OpenAI(api_key=gptkey)
     chat_completion, *_ = client.chat.completions.create(
@@ -81,45 +78,44 @@ def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
         model=f"{model}",
         response_format={"type": "json_object"},
     ).choices
+
     content = chat_completion.message.content
     return content
 
-# Function for making API calls to Groq
-def groq(system_prompt, user_prompt, expected_format, groqkey, model="llama3-70b-8192"):
+def groq(system_prompt, user_prompt, expected_format, groqkey, model):
     client = Groq(api_key=groqkey)
     completion = client.chat.completions.create(
         model=f"{model}",
         messages=[
-            {
-                "role": "system",
-                "content": f"output only JSON object. {system_prompt}"
-            },
-            {
-                "role": "user",
-                "content": f"{expected_format}"
-            },
-            {
-                "role": "user",
-                "content": f"{user_prompt}"
-            }
+            {"role": "system", "content": f"output only JSON object. {system_prompt}"},
+            {"role": "user", "content": f"{expected_format}"},
+            {"role": "user", "content": f"{user_prompt}"}
         ],
         response_format={"type": "json_object"},
-        stop=None,
     )
     content = completion.choices[0].message.content
-    return json.loads(content)
+    reply = json.loads(content)
+    return reply
+
+# Initialize chat history in session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # Helper function to map model names to appropriate API calls
 def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
-    if "Gemini" in model:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model.split(' ')[1]}:generateContent?key={keys['gemini']}"
+    if "gemini" in model:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={keys['gemini']}"
         return gemini(system_prompt, user_prompt, expected_format, url)
-    elif "OpenAI" in model:
-        return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model.split(' ')[1].strip('()'))
-    elif "Groq" in model:
-        return groq(system_prompt, user_prompt, expected_format, keys['groq'], model.split(' ')[1].strip('()'))
+    elif "gpt" in model:
+        return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model)
+    elif "llama" in model or "gemma" in model or "mixtral" in model:
+        return groq(system_prompt, user_prompt, expected_format, keys['groq'], model)
     else:
         return "Model not supported"
+
+# Streamlit app UI
+st.title("Model Match")
+st.write("Compare outputs from different AI models.")
 
 # Text Comparison Page
 if page == "Text Comparison":
@@ -127,9 +123,9 @@ if page == "Text Comparison":
 
     # API keys input
     st.subheader("Enter API Keys")
-    gemini_api_key_text = st.text_input("Gemini API Key (Text)", type="password", key="gemini_text")
-    openai_api_key_text = st.text_input("OpenAI API Key (Text)", type="password", key="openai_text")
-    groq_api_key_text = st.text_input("Groq API Key (Text)", type="password", key="groq_text")
+    gemini_api_key_text = st.text_input("Gemini API Key (Text)", type="password")
+    openai_api_key_text = st.text_input("OpenAI API Key (Text)", type="password")
+    groq_api_key_text = st.text_input("Groq API Key (Text)", type="password")
 
     # Store keys in a dictionary
     api_keys = {
@@ -149,6 +145,7 @@ if page == "Text Comparison":
     # Text input for user prompt
     user_prompt = st.text_area("Enter your prompt here")
 
+    # Button to compare outputs
     if st.button("Compare"):
         if len(selected_models) == 0:
             st.warning("Please select at least one model for comparison.")
@@ -161,7 +158,7 @@ if page == "Text Comparison":
             cols = st.columns(5)
             for i, model in enumerate(selected_models):
                 with cols[i % 5]:
-                    output = call_model_api(model, "system_prompt", user_prompt, "expected_format", api_keys)
+                    output = call_model_api(model, system_prompt, user_prompt, expected_format, api_keys)
                     st.write(f"Output from {model}:")
                     st.write(output)
 
