@@ -109,6 +109,18 @@ def groq(system_prompt, user_prompt, expected_format, groqkey, model="llama3-70b
     content = completion.choices[0].message.content
     return json.loads(content)
 
+# Helper function to map model names to appropriate API calls
+def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
+    if "Gemini" in model:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model.split(' ')[1]}:generateContent?key={keys['gemini']}"
+        return gemini(system_prompt, user_prompt, expected_format, url)
+    elif "OpenAI" in model:
+        return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model.split(' ')[1].strip('()'))
+    elif "Groq" in model:
+        return groq(system_prompt, user_prompt, expected_format, keys['groq'], model.split(' ')[1].strip('()'))
+    else:
+        return "Model not supported"
+
 # Text Comparison Page
 if page == "Text Comparison":
     st.header("Text Comparison")
@@ -118,6 +130,13 @@ if page == "Text Comparison":
     gemini_api_key_text = st.text_input("Gemini API Key (Text)", type="password", key="gemini_text")
     openai_api_key_text = st.text_input("OpenAI API Key (Text)", type="password", key="openai_text")
     groq_api_key_text = st.text_input("Groq API Key (Text)", type="password", key="groq_text")
+
+    # Store keys in a dictionary
+    api_keys = {
+        "gemini": gemini_api_key_text,
+        "openai": openai_api_key_text,
+        "groq": groq_api_key_text
+    }
 
     # Dropdown to select models for comparison
     selected_models = []
@@ -142,15 +161,7 @@ if page == "Text Comparison":
             cols = st.columns(5)
             for i, model in enumerate(selected_models):
                 with cols[i % 5]:
-                    if "Gemini" in model:
-                        output = gemini("system_prompt", user_prompt, "expected_format", gemini_api_key_text)
-                    elif "OpenAI" in model:
-                        output = gpt("system_prompt", user_prompt, "expected_format", openai_api_key_text, model)
-                    elif "Groq" in model:
-                        output = groq("system_prompt", user_prompt, "expected_format", groq_api_key_text)
-                    else:
-                        output = "Model not supported"
-
+                    output = call_model_api(model, "system_prompt", user_prompt, "expected_format", api_keys)
                     st.write(f"Output from {model}:")
                     st.write(output)
 
