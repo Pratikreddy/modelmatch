@@ -93,9 +93,11 @@ if page == "Text Comparison":
 
     # API keys input
     st.subheader("Enter API Keys")
-    api_keys = {}
-    api_keys["openai"] = st.text_input("OpenAI API Key (Text)", type="password")
-    api_keys["groq"] = st.text_input("Groq API Key (Text)", type="password")
+    api_key_dropdown = st.selectbox("Select API Key to Enter", ["OpenAI", "Groq"])
+    if api_key_dropdown == "OpenAI":
+        api_keys["openai"] = st.text_input("OpenAI API Key (Text)", type="password", key="openai_key")
+    elif api_key_dropdown == "Groq":
+        api_keys["groq"] = st.text_input("Groq API Key (Text)", type="password", key="groq_key")
 
     # Dropdown to select models for comparison
     selected_models = []
