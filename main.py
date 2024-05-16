@@ -51,8 +51,8 @@ def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
         response = genai.chat(
             model=model,
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"content": system_prompt},
+                {"content": user_prompt}
             ]
         )
         return response["candidates"][0]["content"]
