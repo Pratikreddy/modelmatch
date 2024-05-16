@@ -48,8 +48,8 @@ model_options = {
 def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
     genai.configure(api_key=gemini_api_key)
     try:
-        response = genai.generate_message(
-            model=f"models/{model}",
+        response = genai.generate_text(
+            model=model,
             messages=[
                 {"content": system_prompt},
                 {"content": user_prompt}
