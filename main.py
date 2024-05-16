@@ -47,6 +47,8 @@ model_options = {
 # Function for making API calls to Gemini using google.generativeai
 def gemini(system_prompt, user_prompt, gemini_api_key, model):
     genai.configure(api_key=gemini_api_key)
+    if not model.startswith("models/") and not model.startswith("tunedModels/"):
+        model = "models/" + model  # Prefix with "models/" if not already prefixed
     try:
         response = genai.generate_text(
             model=model,
