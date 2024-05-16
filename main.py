@@ -44,8 +44,7 @@ model_options = {
     ]
 }
 
-# Functions for making API calls to different models
-
+# Function for making API calls to Gemini using google.generativeai
 def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
     genai.configure(api_key=gemini_api_key)
     response = genai.chat(
@@ -57,6 +56,7 @@ def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
     )
     return response["candidates"][0]["content"]
 
+# Function for making API calls to OpenAI
 def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
     client = OpenAI(api_key=gptkey)
     chat_completion, *_ = client.chat.completions.create(
@@ -72,6 +72,7 @@ def gpt(system_prompt, user_prompt, expected_format, gptkey, model):
     content = chat_completion.message.content
     return content
 
+# Function for making API calls to Groq
 def groq(system_prompt, user_prompt, expected_format, groqkey, model):
     client = Groq(api_key=groqkey)
     completion = client.chat.completions.create(
