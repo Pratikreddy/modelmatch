@@ -32,9 +32,9 @@ model_options = {
         "gpt-3.5-turbo-16k-0613"
     ],
     "Gemini": [
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-flash-latest",
-        "gemini-1.0-pro-latest"
+        "models/gemini-1.5-pro-latest",
+        "models/gemini-1.5-flash-latest",
+        "models/gemini-1.0-pro-latest"
     ],
     "Groq": [
         "gemma-7b-it",
@@ -90,7 +90,7 @@ def groq(system_prompt, user_prompt, expected_format, groqkey, model):
 
 # Helper function to map model names to appropriate API calls
 def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
-    if "gemini" in model:
+    if "models/" in model:
         return gemini(system_prompt, user_prompt, expected_format, keys['gemini'], model)
     elif "gpt" in model:
         return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model)
