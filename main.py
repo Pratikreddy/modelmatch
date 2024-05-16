@@ -45,17 +45,17 @@ model_options = {
 }
 
 # Function for making API calls to Gemini using google.generativeai
-def gemini(system_prompt, user_prompt, expected_format, gemini_api_key, model):
+def gemini(system_prompt, user_prompt, gemini_api_key, model):
     genai.configure(api_key=gemini_api_key)
     try:
         response = genai.generate_text(
             model=model,
-            messages=[
-                {"content": system_prompt},
-                {"content": user_prompt}
-            ]
+            prompt=f"{system_prompt}\n\n{user_prompt}",
+            temperature=0.7,
+            candidate_count=1,
+            max_output_tokens=256
         )
-        return response["candidates"][0]["content"]
+        return response.candidates[0]['output']
     except Exception as e:
         return f"Error: {e}"
 
@@ -94,7 +94,7 @@ def groq(system_prompt, user_prompt, expected_format, groqkey, model):
 # Helper function to map model names to appropriate API calls
 def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
     if "gemini" in model:
-        return gemini(system_prompt, user_prompt, expected_format, keys['gemini'], model)
+        return gemini(system_prompt, user_prompt, keys['gemini'], model)
     elif "gpt" in model:
         return gpt(system_prompt, user_prompt, expected_format, keys['openai'], model)
     elif "llama" in model or "gemma" in model or "mixtral" in model:
