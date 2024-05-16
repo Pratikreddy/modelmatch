@@ -97,10 +97,6 @@ def groq(system_prompt, user_prompt, expected_format, groqkey, model):
     reply = json.loads(content)
     return reply
 
-# Initialize chat history in session state
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
 # Helper function to map model names to appropriate API calls
 def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
     if "gemini" in model:
@@ -116,6 +112,10 @@ def call_model_api(model, system_prompt, user_prompt, expected_format, keys):
 # Streamlit app UI
 st.title("Model Match")
 st.write("Compare outputs from different AI models.")
+
+# Initialize chat history in session state
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # Text Comparison Page
 if page == "Text Comparison":
@@ -144,6 +144,10 @@ if page == "Text Comparison":
 
     # Text input for user prompt
     user_prompt = st.text_area("Enter your prompt here")
+
+    # System prompt and expected format
+    system_prompt = "output only JSON object"
+    expected_format = "{}"
 
     # Button to compare outputs
     if st.button("Compare"):
